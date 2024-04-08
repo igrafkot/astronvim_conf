@@ -20,14 +20,14 @@ return {
       opts.section.header.val = {
         "███▄    █ ▓█████  ▒█████   ██▒   █▓ ██▓ ███▄ ▄███▓",
         "██ ▀█   █ ▓█   ▀ ▒██▒  ██▒▓██░   █▒▓██▒▓██▒▀█▀ ██▒",
-       "▓██  ▀█ ██▒▒███   ▒██░  ██▒ ▓██  █▒░▒██▒▓██    ▓██░",
-       "▓██▒  ▐▌██▒▒▓█  ▄ ▒██   ██░  ▒██ █░░░██░▒██    ▒██ ",
-       "▒██░   ▓██░░▒████▒░ ████▓▒░   ▒▀█░  ░██░▒██▒   ░██▒",
-       "░ ▒░   ▒ ▒ ░░ ▒░ ░░ ▒░▒░▒░    ░ ▐░  ░▓  ░ ▒░   ░  ░",
-       "░ ░░   ░ ▒░ ░ ░  ░  ░ ▒ ▒░    ░ ░░   ▒ ░░  ░      ░",
-       "  ░   ░ ░    ░   ░ ░ ░ ▒       ░░   ▒ ░░      ░   ",
-       "         ░    ░  ░    ░ ░        ░   ░         ░  ",
-       "                               ░                  ",
+        "▓██  ▀█ ██▒▒███   ▒██░  ██▒ ▓██  █▒░▒██▒▓██    ▓██░",
+        "▓██▒  ▐▌██▒▒▓█  ▄ ▒██   ██░  ▒██ █░░░██░▒██    ▒██ ",
+        "▒██░   ▓██░░▒████▒░ ████▓▒░   ▒▀█░  ░██░▒██▒   ░██▒",
+        "░ ▒░   ▒ ▒ ░░ ▒░ ░░ ▒░▒░▒░    ░ ▐░  ░▓  ░ ▒░   ░  ░",
+        "░ ░░   ░ ▒░ ░ ░  ░  ░ ▒ ▒░    ░ ░░   ▒ ░░  ░      ░",
+        "  ░   ░ ░    ░   ░ ░ ░ ▒       ░░   ▒ ░░      ░   ",
+        "         ░    ░  ░    ░ ░        ░   ░         ░  ",
+        "                               ░                  ",
       }
       return opts
     end,
@@ -149,16 +149,11 @@ return {
     opts = {},
   },
   {
-    "tami5/xbase",
-    run = "make insatall",
-    dependencies = { "nvim-lua/plenary.nvim, nvim-telescope/telescope.nvim" },
-    opts = function() require("xbase").setup {} end,
-  },
-  {
     "xbase-lab/xbase",
     ft = { "swift", "objcpp", "objc" },
     run = "make install",
     dependencies = {
+      { "neovim/nvim-lspconfig", optional = true },
       { "nvim-telescope/telescope.nvim", optional = true },
       { "nvim-lua/plenary.nvim", optional = true },
       { "stevearc/dressing.nvim", optional = true }, -- (in case you don't use telescope but something else)
@@ -255,47 +250,47 @@ return {
     optional = true,
     opts = function() require("telescope").load_extension "flutter" end,
   },
-    -- CSharp support
-    {
-      "nvim-treesitter/nvim-treesitter",
-      optional = true,
-      opts = function(_, opts)
-        if opts.ensure_installed ~= "all" then
-          opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "c_sharp" })
-        end
-      end,
-    },
-    {
-      "jay-babu/mason-null-ls.nvim",
-      optional = true,
-      opts = function(_, opts)
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "csharpier" })
-      end,
-    },
-    {
-      "williamboman/mason-lspconfig.nvim",
-      optional = true,
-      opts = function(_, opts)
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "csharp_ls" })
-      end,
-    },
-    {
-      "jay-babu/mason-nvim-dap.nvim",
-      optional = true,
-      opts = function(_, opts)
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "coreclr" })
-      end,
-    },
-    {
-      "WhoIsSethDaniel/mason-tool-installer.nvim",
-      optional = true,
-      opts = function(_, opts)
-        opts.ensure_installed = require("astrocore").list_insert_unique(
-          opts.ensure_installed,
-          { "csharp-language-server", "csharpier", "netcoredbg" }
-        )
-      end,
-    },
+  -- CSharp support
+  {
+    "nvim-treesitter/nvim-treesitter",
+    optional = true,
+    opts = function(_, opts)
+      if opts.ensure_installed ~= "all" then
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "c_sharp" })
+      end
+    end,
+  },
+  {
+    "jay-babu/mason-null-ls.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "csharpier" })
+    end,
+  },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "csharp_ls" })
+    end,
+  },
+  {
+    "jay-babu/mason-nvim-dap.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "coreclr" })
+    end,
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(
+        opts.ensure_installed,
+        { "csharp-language-server", "csharpier", "netcoredbg" }
+      )
+    end,
+  },
   -- add support C++ cpp
   {
     "AstroNvim/astrolsp",
@@ -413,5 +408,53 @@ return {
     "nvim-telescope/telescope.nvim",
     dependencies = { "nvim-telescope/telescope-live-grep-args.nvim" },
     opts = function() require("telescope").load_extension "live_grep_args" end,
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    opts = function()
+      require("mason-tool-installer").setup {
+        ensure_installed = {
+
+          -- you can pin a tool to a particular version
+          { "golangci-lint", version = "v1.47.0" },
+
+          -- you can turn off/on auto_update per tool
+          { "bash-language-server", auto_update = true },
+
+          "lua-language-server",
+          "vim-language-server",
+          "gopls",
+          "stylua",
+          "shellcheck",
+          "editorconfig-checker",
+          "gofumpt",
+          "golines",
+          "gomodifytags",
+          "gotests",
+          "impl",
+          "json-to-struct",
+          "luacheck",
+          "misspell",
+          "revive",
+          "shellcheck",
+          "shfmt",
+          "staticcheck",
+          "vint",
+        },
+
+        -- affect :MasonToolsUpdate or :MasonToolsInstall.
+        -- Default: false
+        auto_update = true,
+
+        -- Default: true
+        run_on_start = true,
+
+        -- Default: 0
+        start_delay = 3000, -- 3 second delay
+
+        -- Default: nil
+        debounce_hours = 5, -- at least 5 hours between attempts to install/update
+      }
+    end,
   },
 }

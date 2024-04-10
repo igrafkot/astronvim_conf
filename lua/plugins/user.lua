@@ -13,6 +13,7 @@ return {
   -- == Examples of Overriding Plugins ==
 
   -- customize alpha options
+  -- NOTE: Text ANSCII
   {
     "goolord/alpha-nvim",
     opts = function(_, opts)
@@ -456,5 +457,86 @@ return {
         debounce_hours = 5, -- at least 5 hours between attempts to install/update
       }
     end,
+  },
+  --== Auto save ==--
+  {
+    "Pocco81/auto-save.nvim",
+    event = { "User AstroFile", "InsertEnter" },
+    opts = {
+      callbacks = {
+        before_saving = function()
+          -- save global autoformat status
+          vim.g.OLD_AUTOFORMAT = vim.g.autoformat_enabled
+
+          vim.g.autoformat_enabled = false
+          vim.g.OLD_AUTOFORMAT_BUFFERS = {}
+          -- disable all manually enabled buffers
+          for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.b[bufnr].autoformat_enabled then
+              table.insert(vim.g.OLD_BUFFER_AUTOFORMATS, bufnr)
+              vim.b[bufnr].autoformat_enabled = false
+            end
+          end
+        end,
+        after_saving = function()
+          -- restore global autoformat status
+          vim.g.autoformat_enabled = vim.g.OLD_AUTOFORMAT
+          -- reenable all manually enabled buffers
+          for _, bufnr in ipairs(vim.g.OLD_AUTOFORMAT_BUFFERS or {}) do
+            vim.b[bufnr].autoformat_enabled = true
+          end
+        end,
+      },
+    },
+  },
+  -- NOTE: Todo Comments
+  {
+    "folke/todo-comments.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    opts = {},
+    event = "User AstroFile",
+    cmd = { "TodoTrouble", "TodoTelescope", "TodoLocList", "TodoQuickFix" },
+  },
+  {
+    "folke/trouble.nvim",
+    cmd = { "TroubleToggle", "Trouble" },
+    dependencies = {
+      { "AstroNvim/astroui", opts = { icons = { Trouble = "󱍼" } } },
+      {
+        "AstroNvim/astrocore",
+        opts = function(_, opts)
+          local maps = opts.mappings
+          local prefix = "<Leader>x"
+          maps.n[prefix] = { desc = require("astroui").get_icon("Trouble", 1, true) .. "Trouble" }
+          maps.n[prefix .. "X"] =
+            { "<Cmd>TroubleToggle workspace_diagnostics<CR>", desc = "Workspace Diagnostics (Trouble)" }
+          maps.n[prefix .. "x"] =
+            { "<Cmd>TroubleToggle document_diagnostics<CR>", desc = "Document Diagnostics (Trouble)" }
+          maps.n[prefix .. "l"] = { "<Cmd>TroubleToggle loclist<CR>", desc = "Location List (Trouble)" }
+          maps.n[prefix .. "q"] = { "<Cmd>TroubleToggle quickfix<CR>", desc = "Quickfix List (Trouble)" }
+        end,
+      },
+    },
+    opts = {
+      use_diagnostic_signs = true,
+      action_keys = {
+        close = { "q", "<ESC>" },
+        cancel = "<C-e>",
+      },
+    },
+  },
+  {
+    "folke/edgy.nvim",
+    optional = true,
+    opts = function(_, opts)
+      if not opts.bottom then opts.bottom = {} end
+      table.insert(opts.bottom, "Trouble")
+    end,
+  },
+  {
+    "catppuccin/nvim",
+    optional = true,
+    ---@type CatppuccinOptions
+    opts = { integrations = { lsp_trouble = true } },
   },
 }

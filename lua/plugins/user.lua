@@ -50,7 +50,16 @@ return {
   {
     "navarasu/onedark.nvim",
     opts = function()
-      require("onedark").setup { style = "deep" }
+      require("onedark").setup { 
+        style = "deep",
+        code_style = {
+          comments = "italic",
+          functions = "none",
+          variables = "italic",
+          keyboards = "none",
+          strings = "italic",
+        },
+      }
       require("onedark").load()
     end,
   },

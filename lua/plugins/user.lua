@@ -152,16 +152,6 @@ return {
     event = "BufRead",
     config = function() require("lsp_signature").setup() end,
   },
-  -- TODO comments
-  -- {
-  --   "folke/todo-comments.nvim",
-  --   dependencies = { "nvim-lua/plenary.nvim" },
-  --   opts = {},
-  -- },
-  -- {
-  --   "stevearc/dressing.nvim",
-  --   opts = {},
-  -- },
   -- Xbase working from swift lang
   {
     "xbase-lab/xbase",

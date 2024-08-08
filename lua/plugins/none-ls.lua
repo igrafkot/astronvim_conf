@@ -15,8 +15,8 @@ return {
     -- (If you wish to replace, use `opts.sources = {}` instead of the `list_insert_unique` function)
     opts.sources = require("astrocore").list_insert_unique(opts.sources, {
       -- Set a formatter
-      null_ls.builtins.formatting.swiftformat, -- https://github.com/nicklockwood/SwiftFormat
-      -- null_ls.builtins.formatting.swift_format, -- https://github.com/apple/swift-format
+      -- null_ls.builtins.formatting.swiftformat, -- https://github.com/nicklockwood/SwiftFormat
+      null_ls.builtins.formatting.swift_format, -- https://github.com/apple/swift-format
             
       -- Set a linter
       null_ls.builtins.diagnostics.swiftlint,

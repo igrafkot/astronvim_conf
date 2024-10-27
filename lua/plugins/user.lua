@@ -6,8 +6,25 @@ return {
   "andweeb/presence.nvim",
   {
     "ray-x/lsp_signature.nvim",
-    event = "BufRead",
-    config = function() require("lsp_signature").setup() end,
+    event = "User AstroFile",
+    main = "lsp_signature",
+    opts = {
+      hint_enable = false, -- disable hints as it will crash in some terminal
+    },
+    specs = {
+      {
+        "folke/noice.nvim",
+        optional = true,
+        ---@type NoiceConfig
+        opts = {
+          lsp = {
+            signature = { enabled = false },
+            hover = { enabled = false },
+          },
+        },
+      },
+      { "AstroNvim/astrolsp", optional = true, opts = { features = { signature_help = false } } },
+    },
   },
 
   -- == Examples of Overriding Plugins ==
@@ -92,6 +109,125 @@ return {
         Rule("a", "a", "-vim")
       )
     end,
+  },
+  -- NOTE: Refactoring
+  {
+    "ThePrimeagen/refactoring.nvim",
+    event = "User AstroFile",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      {
+        "AstroNvim/astrocore",
+        ---@param opts AstroCoreOpts
+        opts = function(_, opts)
+          local get_icon = require("astroui").get_icon
+          return require("astrocore").extend_tbl(opts, {
+            mappings = {
+              n = {
+                ["<Leader>r"] = { desc = get_icon("Refactoring", 1, true) .. "Refactor" },
+                ["<Leader>rb"] = {
+                  function() require("refactoring").refactor "Extract Block" end,
+                  desc = "Extract Block",
+                },
+                ["<Leader>ri"] = {
+                  function() require("refactoring").refactor "Inline Variable" end,
+                  desc = "Inline Variable",
+                },
+                ["<Leader>rp"] = {
+                  function() require("refactoring").debug.printf { below = false } end,
+                  desc = "Debug: Print Function",
+                },
+                ["<Leader>rc"] = {
+                  function() require("refactoring").debug.cleanup {} end,
+                  desc = "Debug: Clean Up",
+                },
+                ["<Leader>rd"] = {
+                  function() require("refactoring").debug.print_var { below = false } end,
+                  desc = "Debug: Print Variable",
+                },
+                ["<Leader>rbf"] = {
+                  function() require("refactoring").refactor "Extract Block To File" end,
+                  desc = "Extract Block To File",
+                },
+              },
+              x = {
+                ["<Leader>r"] = { desc = get_icon("Refactoring", 1, true) .. "Refactor" },
+                ["<Leader>re"] = {
+                  function() require("refactoring").refactor "Extract Function" end,
+                  desc = "Extract Function",
+                },
+                ["<Leader>rf"] = {
+                  function() require("refactoring").refactor "Extract Function To File" end,
+                  desc = "Extract Function To File",
+                },
+                ["<Leader>rv"] = {
+                  function() require("refactoring").refactor "Extract Variable" end,
+                  desc = "Extract Variable",
+                },
+                ["<Leader>ri"] = {
+                  function() require("refactoring").refactor "Inline Variable" end,
+                  desc = "Inline Variable",
+                },
+              },
+              v = {
+                ["<Leader>r"] = { desc = get_icon("Refactoring", 1, true) .. "Refactor" },
+                ["<Leader>re"] = {
+                  function() require("refactoring").refactor "Extract Function" end,
+                  desc = "Extract Function",
+                },
+                ["<Leader>rf"] = {
+                  function() require("refactoring").refactor "Extract Function To File" end,
+                  desc = "Extract Function To File",
+                },
+                ["<Leader>rv"] = {
+                  function() require("refactoring").refactor "Extract Variable" end,
+                  desc = "Extract Variable",
+                },
+                ["<Leader>ri"] = {
+                  function() require("refactoring").refactor "Inline Variable" end,
+                  desc = "Inline Variable",
+                },
+                ["<Leader>rb"] = {
+                  function() require("refactoring").refactor "Extract Block" end,
+                  desc = "Extract Block",
+                },
+                ["<Leader>rbf"] = {
+                  function() require("refactoring").refactor "Extract Block To File" end,
+                  desc = "Extract Block To File",
+                },
+                ["<Leader>rr"] = {
+                  function() require("refactoring").select_refactor() end,
+                  desc = "Select Refactor",
+                },
+                ["<Leader>rp"] = {
+                  function() require("refactoring").debug.printf { below = false } end,
+                  desc = "Debug: Print Function",
+                },
+                ["<Leader>rc"] = {
+                  function() require("refactoring").debug.cleanup {} end,
+                  desc = "Debug: Clean Up",
+                },
+                ["<Leader>rd"] = {
+                  function() require("refactoring").debug.print_var { below = false } end,
+                  desc = "Debug: Print Variable",
+                },
+              },
+            },
+          } --[[@as AstroCoreOpts]])
+        end,
+      },
+      {
+        "AstroNvim/astroui",
+        ---@type AstroUIOpts
+        opts = {
+          icons = {
+            Refactoring = "󰣪",
+          },
+        },
+      },
+    },
+    opts = {},
   },
   -- NOTE: swift settings
   {
@@ -196,17 +332,17 @@ return {
       tvOS = {}, -- all available devices
     },
   },
-   -- Add "flutter" extension to "telescope"
-   {
+  -- Add "flutter" extension to "telescope"
+  {
     "akinsho/flutter-tools.nvim",
     lazy = false,
     dependencies = { "nvim-lua/plenary.nvim", "stevearc/dressing.nvim" },
     opts = function() require("flutter-tools").setup {} end,
   },
- {
-  "nvim-telescope/telescope.nvim",
-  optional = true,
-  opts = function() require("telescope").load_extension "flutter" end,
+  {
+    "nvim-telescope/telescope.nvim",
+    optional = true,
+    opts = function() require("telescope").load_extension "flutter" end,
   },
   {
     "AstroNvim/astrolsp",
@@ -253,8 +389,8 @@ return {
       },
     },
   },
-   -- CSharp support
-   {
+  -- CSharp support
+  {
     "nvim-treesitter/nvim-treesitter",
     optional = true,
     opts = function(_, opts)
@@ -294,83 +430,83 @@ return {
       )
     end,
   },
-    -- add support C++ cpp
-    {
-      "AstroNvim/astrolsp",
-      optional = true,
-      ---@type AstroLSPOpts
+  -- add support C++ cpp
+  {
+    "AstroNvim/astrolsp",
+    optional = true,
+    ---@type AstroLSPOpts
+    opts = {
+      ---@diagnostic disable: missing-fields
+      config = {
+        clangd = {
+          capabilities = {
+            offsetEncoding = "utf-8",
+          },
+        },
+      },
+    },
+  },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    optional = true,
+    opts = function(_, opts)
+      if opts.ensure_installed ~= "all" then
+        opts.ensure_installed =
+          require("astrocore").list_insert_unique(opts.ensure_installed, { "cpp", "c", "objc", "cuda", "proto" })
+      end
+    end,
+  },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd" })
+    end,
+  },
+  {
+    "p00f/clangd_extensions.nvim",
+    lazy = true,
+    dependencies = {
+      "AstroNvim/astrocore",
       opts = {
-        ---@diagnostic disable: missing-fields
-        config = {
-          clangd = {
-            capabilities = {
-              offsetEncoding = "utf-8",
+        autocmds = {
+          clangd_extensions = {
+            {
+              event = "LspAttach",
+              desc = "Load clangd_extensions with clangd",
+              callback = function(args)
+                if assert(vim.lsp.get_client_by_id(args.data.client_id)).name == "clangd" then
+                  require "clangd_extensions"
+                  vim.api.nvim_del_augroup_by_name "clangd_extensions"
+                end
+              end,
             },
           },
         },
       },
     },
-    {
-      "nvim-treesitter/nvim-treesitter",
-      optional = true,
-      opts = function(_, opts)
-        if opts.ensure_installed ~= "all" then
-          opts.ensure_installed =
-            require("astrocore").list_insert_unique(opts.ensure_installed, { "cpp", "c", "objc", "cuda", "proto" })
-        end
-      end,
-    },
-    {
-      "williamboman/mason-lspconfig.nvim",
-      optional = true,
-      opts = function(_, opts)
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd" })
-      end,
-    },
-    {
-      "p00f/clangd_extensions.nvim",
-      lazy = true,
-      dependencies = {
-        "AstroNvim/astrocore",
-        opts = {
-          autocmds = {
-            clangd_extensions = {
-              {
-                event = "LspAttach",
-                desc = "Load clangd_extensions with clangd",
-                callback = function(args)
-                  if assert(vim.lsp.get_client_by_id(args.data.client_id)).name == "clangd" then
-                    require "clangd_extensions"
-                    vim.api.nvim_del_augroup_by_name "clangd_extensions"
-                  end
-                end,
-              },
-            },
-          },
-        },
+  },
+  {
+    "Civitasv/cmake-tools.nvim",
+    ft = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
+    dependencies = {
+      {
+        "jay-babu/mason-nvim-dap.nvim",
+        opts = function(_, opts)
+          opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "codelldb" })
+        end,
       },
     },
-    {
-      "Civitasv/cmake-tools.nvim",
-      ft = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
-      dependencies = {
-        {
-          "jay-babu/mason-nvim-dap.nvim",
-          opts = function(_, opts)
-            opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "codelldb" })
-          end,
-        },
-      },
-      opts = {},
-    },
-    {
-      "WhoIsSethDaniel/mason-tool-installer.nvim",
-      optional = true,
-      opts = function(_, opts)
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd", "codelldb" })
-      end,
-    },
-      -- add support CMAKE
+    opts = {},
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd", "codelldb" })
+    end,
+  },
+  -- add support CMAKE
   {
     "nvim-treesitter/nvim-treesitter",
     optional = true,
@@ -460,7 +596,169 @@ return {
       }
     end,
   },
-  --== Auto save ==--
+  -- NOTE: Python language
+  {
+    {
+      "AstroNvim/astrolsp",
+      optional = true,
+      ---@type AstroLSPOpts
+      opts = {
+        ---@diagnostic disable: missing-fields
+        config = {
+          basedpyright = {
+            before_init = function(_, c)
+              if not c.settings then c.settings = {} end
+              if not c.settings.python then c.settings.python = {} end
+              c.settings.python.pythonPath = vim.fn.exepath "python"
+            end,
+            settings = {
+              basedpyright = {
+                analysis = {
+                  typeCheckingMode = "basic",
+                  autoImportCompletions = true,
+                  stubPath = vim.env.HOME .. "/typings",
+                  diagnosticSeverityOverrides = {
+                    reportUnusedImport = "information",
+                    reportUnusedFunction = "information",
+                    reportUnusedVariable = "information",
+                    reportGeneralTypeIssues = "none",
+                    reportOptionalMemberAccess = "none",
+                    reportOptionalSubscript = "none",
+                    reportPrivateImportUsage = "none",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      "nvim-treesitter/nvim-treesitter",
+      optional = true,
+      opts = function(_, opts)
+        if opts.ensure_installed ~= "all" then
+          opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "python", "toml" })
+        end
+      end,
+    },
+    {
+      "williamboman/mason-lspconfig.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "basedpyright" })
+      end,
+    },
+    {
+      "jay-babu/mason-null-ls.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "black", "isort" })
+      end,
+    },
+    {
+      "jay-babu/mason-nvim-dap.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "python" })
+        if not opts.handlers then opts.handlers = {} end
+        opts.handlers.python = function() end -- make sure python doesn't get set up by mason-nvim-dap, it's being set up by nvim-dap-python
+      end,
+    },
+    {
+      "WhoIsSethDaniel/mason-tool-installer.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed =
+          require("astrocore").list_insert_unique(opts.ensure_installed, { "basedpyright", "black", "isort", "debugpy" })
+      end,
+    },
+    {
+      "linux-cultist/venv-selector.nvim",
+      branch = "regexp",
+      dependencies = {
+        { "nvim-telescope/telescope.nvim", branch = "0.1.x", dependencies = { "nvim-lua/plenary.nvim" } },
+        {
+          "AstroNvim/astrocore",
+          opts = {
+            mappings = {
+              n = {
+                ["<Leader>lv"] = { "<Cmd>VenvSelect<CR>", desc = "Select VirtualEnv" },
+              },
+            },
+          },
+        },
+      },
+      opts = {},
+      cmd = "VenvSelect",
+    },
+    {
+      "mfussenegger/nvim-dap",
+      optional = true,
+      specs = {
+        {
+          "mfussenegger/nvim-dap-python",
+          dependencies = "mfussenegger/nvim-dap",
+          ft = "python", -- NOTE: ft: lazy-load on filetype
+          config = function(_, opts)
+            local path = vim.fn.exepath "python"
+            local debugpy = require("mason-registry").get_package "debugpy"
+            if debugpy:is_installed() then
+              path = debugpy:get_install_path()
+              if vim.fn.has "win32" == 1 then
+                path = path .. "/venv/Scripts/python"
+              else
+                path = path .. "/venv/bin/python"
+              end
+            end
+            require("dap-python").setup(path, opts)
+          end,
+        },
+      },
+    },
+    {
+      "nvim-neotest/neotest",
+      optional = true,
+      dependencies = { "nvim-neotest/neotest-python" },
+      opts = function(_, opts)
+        if not opts.adapters then opts.adapters = {} end
+        table.insert(opts.adapters, require "neotest-python"(require("astrocore").plugin_opts "neotest-python"))
+      end,
+    },
+    {
+      "stevearc/conform.nvim",
+      optional = true,
+      opts = {
+        formatters_by_ft = {
+          python = { "isort", "black" },
+        },
+      },
+    },
+  },
+  --NOTE: == JAVA ==
+  {
+  "nvim-java/nvim-java",
+  lazy = true,
+  opts = {},
+  specs = {
+    { "mfussenegger/nvim-jdtls", optional = true, enabled = false },
+    {
+      "AstroNvim/astrolsp",
+      optional = true,
+      ---@type AstroLSPOpts
+      opts = {
+        servers = { "jdtls" },
+        handlers = {
+          jdtls = function(server, opts)
+            require("lazy").load { plugins = { "nvim-java" } }
+            require("lspconfig")[server].setup(opts)
+          end,
+        },
+      },
+    },
+  },
+},
+  -- NOTE: == Auto save ==--
   {
     "Pocco81/auto-save.nvim",
     event = { "User AstroFile", "InsertEnter" },
@@ -534,5 +832,32 @@ return {
       if not opts.bottom then opts.bottom = {} end
       table.insert(opts.bottom, "Trouble")
     end,
+  },
+  -- NOTE: support Toml
+  {
+    {
+      "nvim-treesitter/nvim-treesitter",
+      optional = true,
+      opts = function(_, opts)
+        -- Ensure that opts.ensure_installed exists and is a table or string "all".
+        if opts.ensure_installed ~= "all" then
+          opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "toml" })
+        end
+      end,
+    },
+    {
+      "williamboman/mason-lspconfig.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "taplo" })
+      end,
+    },
+    {
+      "WhoIsSethDaniel/mason-tool-installer.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "taplo" })
+      end,
+    },
   },
 }

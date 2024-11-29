@@ -17,12 +17,17 @@ return {
       -- Set a formatter
       -- null_ls.builtins.formatting.swiftformat, -- https://github.com/nicklockwood/SwiftFormat
       null_ls.builtins.formatting.swift_format, -- https://github.com/apple/swift-format
-            
+
       -- Set a linter
       null_ls.builtins.diagnostics.swiftlint,
+      null_ls.builtins.diagnostics.ktlint,
       -- Set a formatter
       -- null_ls.builtins.formatting.stylua,
       -- null_ls.builtins.formatting.prettier,
+      null_ls.builtins.formatting.black,
+      null_ls.builtins.formatting.isort,
+      null_ls.builtins.formatting.csharpier
+
     })
   end,
 }

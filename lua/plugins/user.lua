@@ -389,48 +389,75 @@ return {
       },
     },
   },
-  -- CSharp support
-  {
-    "nvim-treesitter/nvim-treesitter",
-    optional = true,
-    opts = function(_, opts)
-      if opts.ensure_installed ~= "all" then
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "c_sharp" })
-      end
-    end,
-  },
-  {
-    "jay-babu/mason-null-ls.nvim",
-    optional = true,
-    opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "csharpier" })
-    end,
-  },
-  {
-    "williamboman/mason-lspconfig.nvim",
-    optional = true,
-    opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "csharp_ls" })
-    end,
-  },
-  {
-    "jay-babu/mason-nvim-dap.nvim",
-    optional = true,
-    opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "coreclr" })
-    end,
-  },
-  {
-    "WhoIsSethDaniel/mason-tool-installer.nvim",
-    optional = true,
-    opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(
-        opts.ensure_installed,
-        { "csharp-language-server", "csharpier", "netcoredbg" }
-      )
-    end,
-  },
-  -- add support C++ cpp
+    -- CSharp support
+    {
+      "nvim-treesitter/nvim-treesitter",
+      optional = true,
+      opts = function(_, opts)
+        if opts.ensure_installed ~= "all" then
+          opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "c_sharp" })
+        end
+      end,
+    },
+    {
+      "jay-babu/mason-null-ls.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "csharpier" })
+      end,
+    },
+    {
+      "williamboman/mason-lspconfig.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "csharp_ls" })
+      end,
+    },
+    {
+      "Decodetalkers/csharpls-extended-lsp.nvim",
+      dependencies = {
+        {
+          "AstroNvim/astrolsp",
+          opts = {
+            config = {
+              csharp_ls = {
+                handlers = {
+                  ["textDocument/definition"] = function(...) require("csharpls_extended").handler(...) end,
+                  ["textDocument/typeDefinition"] = function(...) require("csharpls_extended").handler(...) end,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      "jay-babu/mason-nvim-dap.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "coreclr" })
+      end,
+    },
+    {
+      "WhoIsSethDaniel/mason-tool-installer.nvim",
+      optional = true,
+      opts = function(_, opts)
+        opts.ensure_installed = require("astrocore").list_insert_unique(
+          opts.ensure_installed,
+          { "csharp-language-server", "csharpier", "netcoredbg" }
+        )
+      end,
+    },
+    {
+      "nvim-neotest/neotest",
+      optional = true,
+      dependencies = { "Issafalcon/neotest-dotnet", config = function() end },
+      opts = function(_, opts)
+        if not opts.adapters then opts.adapters = {} end
+        table.insert(opts.adapters, require "neotest-dotnet"(require("astrocore").plugin_opts "neotest-dotnet"))
+      end,
+    },
+  --NOTE: add support C++ cpp
   {
     "AstroNvim/astrolsp",
     optional = true,
@@ -506,7 +533,7 @@ return {
       opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd", "codelldb" })
     end,
   },
-  -- add support CMAKE
+  --NOTE: add support CMAKE
   {
     "nvim-treesitter/nvim-treesitter",
     optional = true,
@@ -530,7 +557,7 @@ return {
       opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "neocmakelsp" })
     end,
   },
-  --add telescope-coc-nvim
+  --NOTE: add telescope-coc-nvim
   {
     "nvim-telescope/telescope.nvim",
     dependencies = { "fannheyward/telescope-coc.nvim" },
@@ -646,7 +673,7 @@ return {
       "williamboman/mason-lspconfig.nvim",
       optional = true,
       opts = function(_, opts)
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "basedpyright" })
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "pyright" })
       end,
     },
     {
@@ -670,7 +697,7 @@ return {
       optional = true,
       opts = function(_, opts)
         opts.ensure_installed =
-          require("astrocore").list_insert_unique(opts.ensure_installed, { "basedpyright", "black", "isort", "debugpy" })
+          require("astrocore").list_insert_unique(opts.ensure_installed, { "pyright", "black", "isort", "debugpy" })
       end,
     },
     {
@@ -860,4 +887,162 @@ return {
       end,
     },
   },
+  --NOTE: XCode Build
+  {
+  "wojciech-kulik/xcodebuild.nvim",
+  dependencies = {
+    "nvim-telescope/telescope.nvim",
+    "MunifTanjim/nui.nvim",
+  },
+  config = function()
+    require("xcodebuild").setup({ 
+      code_coverage = {
+        enabled = true,
+      },
+    })
+ 
+    vim.keymap.set("n", "<leader>xl", "<cmd>XcodebuildToggleLogs<cr>", { desc = "Toggle Xcodebuild Logs" })
+    vim.keymap.set("n", "<leader>xb", "<cmd>XcodebuildBuild<cr>", { desc = "Build Project" })
+    vim.keymap.set("n", "<leader>xr", "<cmd>XcodebuildBuildRun<cr>", { desc = "Build & Run Project" })
+    vim.keymap.set("n", "<leader>xt", "<cmd>XcodebuildTest<cr>", { desc = "Run Tests" })
+    vim.keymap.set("n", "<leader>xT", "<cmd>XcodebuildTestClass<cr>", { desc = "Run This Test Class" })
+    vim.keymap.set("n", "<leader>X", "<cmd>XcodebuildPicker<cr>", { desc = "Show All Xcodebuild Actions" })
+    vim.keymap.set("n", "<leader>xd", "<cmd>XcodebuildSelectDevice<cr>", { desc = "Select Device" })
+    vim.keymap.set("n", "<leader>xp", "<cmd>XcodebuildSelectTestPlan<cr>", { desc = "Select Test Plan" })
+    vim.keymap.set("n", "<leader>xc", "<cmd>XcodebuildToggleCodeCoverage<cr>", { desc = "Toggle Code Coverage" })
+    vim.keymap.set("n", "<leader>xC", "<cmd>XcodebuildShowCodeCoverageReport<cr>", { desc = "Show Code Coverage Report" })
+    vim.keymap.set("n", "<leader>xq", "<cmd>Telescope quickfix<cr>", { desc = "Show QuickFix List" })
+  end,
+},
+  --NOTE: UI-DAP
+   {
+  "rcarriga/nvim-dap-ui",
+  dependencies = { "mfussenegger/nvim-dap", },
+  lazy = true,
+  config = function()
+    require("dapui").setup({
+      controls = {
+        element = "repl",
+        enabled = true,
+      },
+      floating = {
+        border = "single",
+        mappings = {
+          close = { "q", "<Esc>" },
+        },
+      },
+      icons = { collapsed = "", expanded = "", current_frame = "" },
+      layouts = {
+        {
+          elements = {
+            { id = "stacks", size = 0.25 },
+            { id = "scopes", size = 0.25 },
+            { id = "breakpoints", size = 0.25 },
+            { id = "watches", size = 0.25 },
+          },
+          position = "left",
+          size = 60,
+        },
+        {
+          elements = {
+            { id = "repl", size = 0.35 },
+            { id = "console", size = 0.65 },
+          },
+          position = "bottom",
+          size = 10,
+        },
+      },
+    })
+ 
+    local dap, dapui = require("dap"), require("dapui")
+ 
+    dap.listeners.after.event_initialized["dapui_config"] = function()
+      dapui.open()
+    end
+    dap.listeners.before.event_terminated["dapui_config"] = function()
+      dapui.close()
+    end
+    dap.listeners.before.event_exited["dapui_config"] = function()
+      dapui.close()
+    end
+  end,
+},
+  --NOTE: HTML and CSS
+  {
+    "AstroNvim/astrocore",
+    ---@type AstroCoreOpts
+    opts = { filetypes = { extension = {
+      pcss = "postcss",
+      postcss = "postcss",
+    } } },
+  },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    optional = true,
+    opts = function(_, opts)
+      if opts.ensure_installed ~= "all" then
+        opts.ensure_installed =
+          require("astrocore").list_insert_unique(opts.ensure_installed, { "html", "css", "scss" })
+      end
+      vim.treesitter.language.register("scss", "less")
+      vim.treesitter.language.register("scss", "postcss")
+    end,
+  },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed =
+        require("astrocore").list_insert_unique(opts.ensure_installed, { "html", "cssls", "emmet_ls" })
+    end,
+  },
+  {
+    "AstroNvim/astrolsp",
+    opts = {
+      config = {
+        html = { init_options = { provideFormatter = false } },
+        cssls = { init_options = { provideFormatter = false } },
+      },
+    },
+  },
+  {
+    "jay-babu/mason-null-ls.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "prettierd" })
+    end,
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(
+        opts.ensure_installed,
+        { "html-lsp", "css-lsp", "emmet-ls", "prettierd" }
+      )
+    end,
+  },
+  {
+    "stevearc/conform.nvim",
+    optional = true,
+    opts = {
+      formatters_by_ft = {
+        html = { "prettierd", "prettier", stop_after_first = true },
+        css = { "prettierd", "prettier", stop_after_first = true },
+        scss = { "prettierd", "prettier", stop_after_first = true },
+        less = { "prettierd", "prettier", stop_after_first = true },
+        postcss = { "prettierd", "prettier", stop_after_first = true },
+      },
+    },
+  },
+  {
+    "echasnovski/mini.icons",
+    optional = true,
+    opts = {
+      filetype = {
+        postcss = { glyph = "󰌜", hl = "MiniIconsOrange" },
+      },
+    },
+  },
 }
+

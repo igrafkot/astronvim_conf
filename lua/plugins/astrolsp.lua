@@ -50,12 +50,12 @@ return {
       "neocmake",
       "csharp_ls",
       "html",
-      "css",
       "emmet_ls"
     },
     -- customize language server configuration options passed to `lspconfig`
     ---@diagnostic disable: missing-fields
     config = {
+      "sourcekit",
       -- clangd = { capabilities = { offsetEncoding = "utf-8" } },
     },
     -- customize how language servers are attached

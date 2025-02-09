@@ -1,4 +1,7 @@
 ---@type LazySpec
+local uname = (vim.uv or vim.loop).os_uname()
+local is_linux_arm = uname.sysname == "Linux" and (uname.machine == "aarch64" or vim.startswith(uname.machine, "arm"))
+
 return {
 
   -- == Examples of Adding Plugins ==
@@ -109,6 +112,77 @@ return {
         Rule("a", "a", "-vim")
       )
     end,
+  },
+  --NOTE: Blankline
+  {
+  "lukas-reineke/indent-blankline.nvim",
+  event = "User AstroFile",
+  opts = {
+    indent = {
+      char = "│",
+    },
+    scope = {
+      enabled = false,
+    },
+    exclude = {
+      filetypes = { "help", "alpha", "dashboard", "Trouble", "lazy", "neo-tree" },
+    },
+    whitespace = {
+      remove_blankline_trail = true,
+    },
+  },
+  --NOTE: Kotlin
+  {
+    "nvim-treesitter/nvim-treesitter",
+    optional = true,
+    opts = function(_, opts)
+      if opts.ensure_installed ~= "all" then
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "kotlin" })
+      end
+    end,
+  },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed =
+        require("astrocore").list_insert_unique(opts.ensure_installed, { "kotlin_language_server" })
+    end,
+  },
+
+  {
+    "jay-babu/mason-null-ls.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "ktlint" })
+    end,
+  },
+
+  {
+    "jay-babu/mason-nvim-dap.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "kotlin" })
+    end,
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(
+        opts.ensure_installed,
+        { "kotlin-language-server", "ktlint", "kotlin-debug-adapter" }
+      )
+    end,
+  },
+  {
+    "mfussenegger/nvim-lint",
+    optional = true,
+    opts = {
+      linters_by_ft = {
+        kotlin = { "ktlint" },
+      },
+    },
   },
   -- NOTE: Refactoring
   {
@@ -288,7 +362,7 @@ return {
     event = "BufRead",
     config = function() require("lsp_signature").setup() end,
   },
-  -- Xbase working from swift lang
+  --NOTE: Xbase working from swift lang
   {
     "xbase-lab/xbase",
     ft = { "swift", "objcpp", "objc" },
@@ -332,7 +406,7 @@ return {
       tvOS = {}, -- all available devices
     },
   },
-  -- Add "flutter" extension to "telescope"
+  --NOTE: Add "flutter" extension to "telescope"
   {
     "akinsho/flutter-tools.nvim",
     lazy = false,
@@ -389,7 +463,7 @@ return {
       },
     },
   },
-    -- CSharp support
+    --NOTE: CSharp support
     {
       "nvim-treesitter/nvim-treesitter",
       optional = true,
@@ -461,17 +535,16 @@ return {
   {
     "AstroNvim/astrolsp",
     optional = true,
-    ---@type AstroLSPOpts
-    opts = {
-      ---@diagnostic disable: missing-fields
-      config = {
+    opts = function(_, opts)
+      opts.config = vim.tbl_deep_extend("keep", opts.config, {
         clangd = {
           capabilities = {
             offsetEncoding = "utf-8",
           },
         },
-      },
-    },
+      })
+      if is_linux_arm then opts.servers = require("astrocore").list_insert_unique(opts.servers, { "clangd" }) end
+    end,
   },
   {
     "nvim-treesitter/nvim-treesitter",
@@ -487,7 +560,9 @@ return {
     "williamboman/mason-lspconfig.nvim",
     optional = true,
     opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd" })
+      if not is_linux_arm then
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd" })
+      end
     end,
   },
   {
@@ -505,6 +580,21 @@ return {
                 if assert(vim.lsp.get_client_by_id(args.data.client_id)).name == "clangd" then
                   require "clangd_extensions"
                   vim.api.nvim_del_augroup_by_name "clangd_extensions"
+                end
+              end,
+            },
+          },
+          clangd_extension_mappings = {
+            {
+              event = "LspAttach",
+              desc = "Load clangd_extensions with clangd",
+              callback = function(args)
+                if assert(vim.lsp.get_client_by_id(args.data.client_id)).name == "clangd" then
+                  require("astrocore").set_mappings({
+                    n = {
+                      ["<Leader>lw"] = { "<Cmd>ClangdSwitchSourceHeader<CR>", desc = "Switch source/header file" },
+                    },
+                  }, { buffer = args.buf })
                 end
               end,
             },
@@ -530,7 +620,9 @@ return {
     "WhoIsSethDaniel/mason-tool-installer.nvim",
     optional = true,
     opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd", "codelldb" })
+      local tools = { "codelldb" }
+      if not is_linux_arm then table.insert(tools, "clangd") end
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, tools)
     end,
   },
   --NOTE: add support CMAKE
@@ -568,7 +660,7 @@ return {
         theme = "ivy",
         prefer_locations = true, -- always use Telescope locations to preview definitions/declarations/implementations etc
       }
-    end,
+ end,
   },
   {
     "nvim-telescope/telescope.nvim",
@@ -785,37 +877,123 @@ return {
     },
   },
 },
-  -- NOTE: == Auto save ==--
-  {
-    "Pocco81/auto-save.nvim",
-    event = { "User AstroFile", "InsertEnter" },
-    opts = {
-      callbacks = {
-        before_saving = function()
-          -- save global autoformat status
-          vim.g.OLD_AUTOFORMAT = vim.g.autoformat_enabled
-
-          vim.g.autoformat_enabled = false
-          vim.g.OLD_AUTOFORMAT_BUFFERS = {}
-          -- disable all manually enabled buffers
-          for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-            if vim.b[bufnr].autoformat_enabled then
-              table.insert(vim.g.OLD_BUFFER_AUTOFORMATS, bufnr)
-              vim.b[bufnr].autoformat_enabled = false
-            end
-          end
-        end,
-        after_saving = function()
-          -- restore global autoformat status
-          vim.g.autoformat_enabled = vim.g.OLD_AUTOFORMAT
-          -- reenable all manually enabled buffers
-          for _, bufnr in ipairs(vim.g.OLD_AUTOFORMAT_BUFFERS or {}) do
-            vim.b[bufnr].autoformat_enabled = true
-          end
-        end,
+--NOTE: formater Conform
+{
+  "stevearc/conform.nvim",
+  event = "User AstroFile",
+  version = vim.fn.has "nvim-0.10" ~= 1 and "7",
+  cmd = "ConformInfo",
+  specs = {
+    { "AstroNvim/astrolsp", optional = true, opts = { formatting = { disabled = true } } },
+    { "jay-babu/mason-null-ls.nvim", optional = true, opts = { methods = { formatting = false } } },
+  },
+  dependencies = {
+    { "williamboman/mason.nvim", optional = true },
+    {
+      "AstroNvim/astrocore",
+      opts = {
+        options = { opt = { formatexpr = "v:lua.require'conform'.formatexpr()" } },
+        commands = {
+          Format = {
+            function(args)
+              local range = nil
+              if args.count ~= -1 then
+                local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+                range = {
+                  start = { args.line1, 0 },
+                  ["end"] = { args.line2, end_line:len() },
+                }
+              end
+              require("conform").format { async = true, range = range }
+            end,
+            desc = "Format buffer",
+            range = true,
+          },
+        },
+        mappings = {
+          n = {
+            ["<Leader>lf"] = { function() vim.cmd.Format() end, desc = "Format buffer" },
+            ["<Leader>lc"] = { function() vim.cmd.ConformInfo() end, desc = "Conform information" },
+            ["<Leader>uf"] = {
+              function()
+                vim.b.autoformat = not vim.F.if_nil(vim.b.autoformat, vim.g.autoformat, true)
+                require("astrocore").notify(
+                  string.format("Buffer autoformatting %s", vim.b.autoformat and "on" or "off")
+                )
+              end,
+              desc = "Toggle autoformatting (buffer)",
+            },
+            ["<Leader>uF"] = {
+              function()
+                vim.g.autoformat, vim.b.autoformat = not vim.F.if_nil(vim.g.autoformat, true), nil
+                require("astrocore").notify(
+                  string.format("Global autoformatting %s", vim.g.autoformat and "on" or "off")
+                )
+              end,
+              desc = "Toggle autoformatting (global)",
+            },
+          },
+        },
       },
     },
   },
+  opts = {
+    default_format_opts = { lsp_format = "fallback" },
+    format_on_save = function(bufnr)
+      if vim.F.if_nil(vim.b[bufnr].autoformat, vim.g.autoformat, true) then return { timeout_ms = 500 } end
+    end,
+  },
+},
+  -- NOTE: == Auto save ==--
+  {
+    "okuuva/auto-save.nvim",
+    event = { "User AstroFile", "InsertEnter" },
+    dependencies = {
+      "AstroNvim/astrocore",
+      opts = {
+        autocmds = {
+          autoformat_toggle = {
+            -- Disable autoformat before saving
+            {
+              event = "User",
+              desc = "Disable autoformat before saving",
+              pattern = "AutoSaveWritePre",
+              callback = function()
+                -- Save global autoformat status
+                vim.g.OLD_AUTOFORMAT = vim.g.autoformat
+                vim.g.autoformat = false
+  
+                local old_autoformat_buffers = {}
+                -- Disable all manually enabled buffers
+                for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+                  if vim.b[bufnr].autoformat then
+                    table.insert(old_autoformat_buffers, bufnr)
+                    vim.b[bufnr].autoformat = false
+                  end
+                end
+  
+                vim.g.OLD_AUTOFORMAT_BUFFERS = old_autoformat_buffers
+              end,
+            },
+            -- Re-enable autoformat after saving
+            {
+              event = "User",
+              desc = "Re-enable autoformat after saving",
+              pattern = "AutoSaveWritePost",
+              callback = function()
+                -- Restore global autoformat status
+                vim.g.autoformat = vim.g.OLD_AUTOFORMAT
+                -- Re-enable all manually enabled buffers
+                for _, bufnr in ipairs(vim.g.OLD_AUTOFORMAT_BUFFERS or {}) do
+                  vim.b[bufnr].autoformat = true
+                end
+              end,
+            },
+          },
+        },
+      },
+    },
+    opts = {},
   -- NOTE: Todo Comments
   {
     "folke/todo-comments.nvim",

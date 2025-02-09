@@ -44,18 +44,20 @@ return {
     -- enable servers that you already have installed without mason
     servers = {
       "pyright",
+      "kotlin_language_server",
       "sourcekit",
       "jdtls",
       "lemminx",
       "neocmake",
       "csharp_ls",
       "html",
-      "emmet_ls"
+      "emmet_ls",
+      "clangd"
     },
     -- customize language server configuration options passed to `lspconfig`
     ---@diagnostic disable: missing-fields
     config = {
-      "sourcekit",
+      "sourcekit"
       -- clangd = { capabilities = { offsetEncoding = "utf-8" } },
     },
     -- customize how language servers are attached
@@ -117,4 +119,3 @@ return {
     end,
   },
 }
-

@@ -17,6 +17,7 @@ return {
       -- Set a formatter
       -- null_ls.builtins.formatting.swiftformat, -- https://github.com/nicklockwood/SwiftFormat
       null_ls.builtins.formatting.swift_format, -- https://github.com/apple/swift-format
+      null_ls.builtins.formatting.clang-format,
 
       -- Set a linter
       null_ls.builtins.diagnostics.swiftlint,

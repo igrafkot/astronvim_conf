@@ -1,4 +1,7 @@
 ---@type LazySpec
+local uname = (vim.uv or vim.loop).os_uname()
+local is_linux_arm = uname.sysname == "Linux" and (uname.machine == "aarch64" or vim.startswith(uname.machine, "arm"))
+
 return {
 
   -- == Examples of Adding Plugins ==

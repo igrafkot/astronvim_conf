@@ -458,20 +458,118 @@ return {
       end,
     },
   --NOTE: add support C++ cpp
+  -- {
+  --   "AstroNvim/astrolsp",
+  --   optional = true,
+  --   ---@type AstroLSPOpts
+  --   opts = {
+  --     ---@diagnostic disable: missing-fields
+  --     config = {
+  --       clangd = {
+  --         capabilities = {
+  --           offsetEncoding = "utf-8",
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
+  -- {
+  --   "nvim-treesitter/nvim-treesitter",
+  --   optional = true,
+  --   opts = function(_, opts)
+  --     if opts.ensure_installed ~= "all" then
+  --       opts.ensure_installed =
+  --         require("astrocore").list_insert_unique(opts.ensure_installed, { "cpp", "c", "objc", "cuda", "proto" })
+  --     end
+  --   end,
+  -- },
+  -- {
+  --   "williamboman/mason-lspconfig.nvim",
+  --   optional = true,
+  --   opts = function(_, opts)
+  --     opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd" })
+  --   end,
+  -- },
+  -- {
+  --   "p00f/clangd_extensions.nvim",
+  --   lazy = true,
+  --   dependencies = {
+  --     "AstroNvim/astrocore",
+  --     opts = {
+  --       autocmds = {
+  --         clangd_extensions = {
+  --           {
+  --             event = "LspAttach",
+  --             desc = "Load clangd_extensions with clangd",
+  --             callback = function(args)
+  --               if assert(vim.lsp.get_client_by_id(args.data.client_id)).name == "clangd" then
+  --                 require "clangd_extensions"
+  --                 vim.api.nvim_del_augroup_by_name "clangd_extensions"
+  --               end
+  --             end,
+  --           },
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
+  -- {
+  --   "Civitasv/cmake-tools.nvim",
+  --   ft = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
+  --   dependencies = {
+  --     {
+  --       "jay-babu/mason-nvim-dap.nvim",
+  --       opts = function(_, opts)
+  --         opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "codelldb" })
+  --       end,
+  --     },
+  --   },
+  --   opts = {},
+  -- },
+  -- {
+  --   "WhoIsSethDaniel/mason-tool-installer.nvim",
+  --   optional = true,
+  --   opts = function(_, opts)
+  --     opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd", "codelldb" })
+  --   end,
+  -- },
+  -- --NOTE: add support CMAKE
+  -- {
+  --   "nvim-treesitter/nvim-treesitter",
+  --   optional = true,
+  --   opts = function(_, opts)
+  --     if opts.ensure_installed ~= "all" then
+  --       opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "cmake" })
+  --     end
+  --   end,
+  -- },
+  -- {
+  --   "williamboman/mason-lspconfig.nvim",
+  --   optional = true,
+  --   opts = function(_, opts)
+  --     opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "neocmake" })
+  --   end,
+  -- },
+  -- {
+  --   "WhoIsSethDaniel/mason-tool-installer.nvim",
+  --   optional = true,
+  --   opts = function(_, opts)
+  --     opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "neocmakelsp" })
+  --   end,
+  -- },
   {
     "AstroNvim/astrolsp",
     optional = true,
-    ---@type AstroLSPOpts
-    opts = {
-      ---@diagnostic disable: missing-fields
-      config = {
+    opts = function(_, opts)
+      opts.config = vim.tbl_deep_extend("keep", opts.config, {
         clangd = {
           capabilities = {
             offsetEncoding = "utf-8",
           },
         },
-      },
-    },
+      })
+      if is_linux_arm then opts.servers = require("astrocore").list_insert_unique(opts.servers, { "clangd" }) end
+    end,
   },
   {
     "nvim-treesitter/nvim-treesitter",
@@ -487,7 +585,9 @@ return {
     "williamboman/mason-lspconfig.nvim",
     optional = true,
     opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd" })
+      if not is_linux_arm then
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd" })
+      end
     end,
   },
   {
@@ -505,6 +605,21 @@ return {
                 if assert(vim.lsp.get_client_by_id(args.data.client_id)).name == "clangd" then
                   require "clangd_extensions"
                   vim.api.nvim_del_augroup_by_name "clangd_extensions"
+                end
+              end,
+            },
+          },
+          clangd_extension_mappings = {
+            {
+              event = "LspAttach",
+              desc = "Load clangd_extensions with clangd",
+              callback = function(args)
+                if assert(vim.lsp.get_client_by_id(args.data.client_id)).name == "clangd" then
+                  require("astrocore").set_mappings({
+                    n = {
+                      ["<Leader>lw"] = { "<Cmd>ClangdSwitchSourceHeader<CR>", desc = "Switch source/header file" },
+                    },
+                  }, { buffer = args.buf })
                 end
               end,
             },
@@ -530,31 +645,9 @@ return {
     "WhoIsSethDaniel/mason-tool-installer.nvim",
     optional = true,
     opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "clangd", "codelldb" })
-    end,
-  },
-  --NOTE: add support CMAKE
-  {
-    "nvim-treesitter/nvim-treesitter",
-    optional = true,
-    opts = function(_, opts)
-      if opts.ensure_installed ~= "all" then
-        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "cmake" })
-      end
-    end,
-  },
-  {
-    "williamboman/mason-lspconfig.nvim",
-    optional = true,
-    opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "neocmake" })
-    end,
-  },
-  {
-    "WhoIsSethDaniel/mason-tool-installer.nvim",
-    optional = true,
-    opts = function(_, opts)
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "neocmakelsp" })
+      local tools = { "codelldb" }
+      if not is_linux_arm then table.insert(tools, "clangd") end
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, tools)
     end,
   },
   --NOTE: add telescope-coc-nvim
@@ -763,183 +856,183 @@ return {
     },
   },
   --NOTE: == JAVA ==
---   {
---   "nvim-java/nvim-java",
---   lazy = true,
---   opts = {},
---   specs = {
---     { "mfussenegger/nvim-jdtls", optional = true, enabled = false },
---     {
---       "AstroNvim/astrolsp",
---       optional = true,
---       ---@type AstroLSPOpts
---       opts = {
---         servers = { "jdtls" },
---         handlers = {
---           jdtls = function(server, opts)
---             require("lazy").load { plugins = { "nvim-java" } }
---             require("lspconfig")[server].setup(opts)
---           end,
---         },
---       },
---     },
---   },
--- },
-{
-  "nvim-treesitter/nvim-treesitter",
-  optional = true,
-  opts = function(_, opts)
-    if opts.ensure_installed ~= "all" then
-      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "java" })
-    end
-  end,
-},
-{
-  "williamboman/mason-lspconfig.nvim",
-  optional = true,
-  opts = function(_, opts)
-    opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "jdtls" })
-  end,
-},
-{
-  "jay-babu/mason-nvim-dap.nvim",
-  optional = true,
-  opts = function(_, opts)
-    opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "javadbg", "javatest" })
-  end,
-},
-{
-  "WhoIsSethDaniel/mason-tool-installer.nvim",
-  optional = true,
-  opts = function(_, opts)
-    opts.ensure_installed =
-      require("astrocore").list_insert_unique(opts.ensure_installed, { "jdtls", "java-debug-adapter", "java-test" })
-  end,
-},
-{
-  "mfussenegger/nvim-jdtls",
-  ft = { "java" },
-  dependencies = {
+  --   {
+  --   "nvim-java/nvim-java",
+  --   lazy = true,
+  --   opts = {},
+  --   specs = {
+  --     { "mfussenegger/nvim-jdtls", optional = true, enabled = false },
+  --     {
+  --       "AstroNvim/astrolsp",
+  --       optional = true,
+  --       ---@type AstroLSPOpts
+  --       opts = {
+  --         servers = { "jdtls" },
+  --         handlers = {
+  --           jdtls = function(server, opts)
+  --             require("lazy").load { plugins = { "nvim-java" } }
+  --             require("lspconfig")[server].setup(opts)
+  --           end,
+  --         },
+  --       },
+  --     },
+  --   },
+  -- },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    optional = true,
+    opts = function(_, opts)
+      if opts.ensure_installed ~= "all" then
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "java" })
+      end
+    end,
+  },
+  {
     "williamboman/mason-lspconfig.nvim",
-    {
-      "AstroNvim/astrolsp",
-      optional = true,
-      ---@type AstroLSPOpts
-      opts = {
-        ---@diagnostic disable: missing-fields
-        handlers = { jdtls = false },
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "jdtls" })
+    end,
+  },
+  {
+    "jay-babu/mason-nvim-dap.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "javadbg", "javatest" })
+    end,
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed =
+        require("astrocore").list_insert_unique(opts.ensure_installed, { "jdtls", "java-debug-adapter", "java-test" })
+    end,
+  },
+  {
+    "mfussenegger/nvim-jdtls",
+    ft = { "java" },
+    dependencies = {
+      "williamboman/mason-lspconfig.nvim",
+      {
+        "AstroNvim/astrolsp",
+        optional = true,
+        ---@type AstroLSPOpts
+        opts = {
+          ---@diagnostic disable: missing-fields
+          handlers = { jdtls = false },
+        },
       },
     },
+    opts = function(_, opts)
+      local utils = require "astrocore"
+      -- use this function notation to build some variables
+      local root_markers = { ".git", "mvnw", "gradlew", "pom.xml", "build.gradle", ".project" }
+      local root_dir = require("jdtls.setup").find_root(root_markers)
+      -- calculate workspace dir
+      local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
+      local workspace_dir = vim.fn.stdpath "data" .. "/site/java/workspace-root/" .. project_name
+      vim.fn.mkdir(workspace_dir, "p")
+
+      -- validate operating system
+      if not (vim.fn.has "mac" == 1 or vim.fn.has "unix" == 1 or vim.fn.has "win32" == 1) then
+        utils.notify("jdtls: Could not detect valid OS", vim.log.levels.ERROR)
+      end
+
+      return utils.extend_tbl({
+        cmd = {
+          "java",
+          "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+          "-Dosgi.bundles.defaultStartLevel=4",
+          "-Declipse.product=org.eclipse.jdt.ls.core.product",
+          "-Dlog.protocol=true",
+          "-Dlog.level=ALL",
+          "-javaagent:" .. vim.fn.expand "$MASON/share/jdtls/lombok.jar",
+          "-Xms1g",
+          "--add-modules=ALL-SYSTEM",
+          "--add-opens",
+          "java.base/java.util=ALL-UNNAMED",
+          "--add-opens",
+          "java.base/java.lang=ALL-UNNAMED",
+          "-jar",
+          vim.fn.expand "$MASON/share/jdtls/plugins/org.eclipse.equinox.launcher.jar",
+          "-configuration",
+          vim.fn.expand "$MASON/share/jdtls/config",
+          "-data",
+          workspace_dir,
+        },
+        root_dir = root_dir,
+        settings = {
+          java = {
+            eclipse = { downloadSources = true },
+            configuration = { updateBuildConfiguration = "interactive" },
+            maven = { downloadSources = true },
+            implementationsCodeLens = { enabled = true },
+            referencesCodeLens = { enabled = true },
+            inlayHints = { parameterNames = { enabled = "all" } },
+            signatureHelp = { enabled = true },
+            completion = {
+              favoriteStaticMembers = {
+                "org.hamcrest.MatcherAssert.assertThat",
+                "org.hamcrest.Matchers.*",
+                "org.hamcrest.CoreMatchers.*",
+                "org.junit.jupiter.api.Assertions.*",
+                "java.util.Objects.requireNonNull",
+                "java.util.Objects.requireNonNullElse",
+                "org.mockito.Mockito.*",
+              },
+            },
+            sources = {
+              organizeImports = {
+                starThreshold = 9999,
+                staticStarThreshold = 9999,
+              },
+            },
+          },
+        },
+        init_options = {
+          bundles = {
+            vim.fn.expand "$MASON/share/java-debug-adapter/com.microsoft.java.debug.plugin.jar",
+            -- unpack remaining bundles
+            (table.unpack or unpack)(vim.split(vim.fn.glob "$MASON/share/java-test/*.jar", "\n", {})),
+          },
+        },
+        handlers = {
+          ["$/progress"] = function() end, -- disable progress updates.
+        },
+        filetypes = { "java" },
+        on_attach = function(...)
+          require("jdtls").setup_dap { hotcodereplace = "auto" }
+          local astrolsp_avail, astrolsp = pcall(require, "astrolsp")
+          if astrolsp_avail then astrolsp.on_attach(...) end
+        end,
+      }, opts)
+    end,
+    config = function(_, opts)
+      -- setup autocmd on filetype detect java
+      vim.api.nvim_create_autocmd("Filetype", {
+        pattern = "java", -- autocmd to start jdtls
+        callback = function()
+          if opts.root_dir and opts.root_dir ~= "" then
+            require("jdtls").start_or_attach(opts)
+          else
+            require("astrocore").notify("jdtls: root_dir not found. Please specify a root marker", vim.log.levels.ERROR)
+          end
+        end,
+      })
+      -- create autocmd to load main class configs on LspAttach.
+      -- This ensures that the LSP is fully attached.
+      -- See https://github.com/mfussenegger/nvim-jdtls#nvim-dap-configuration
+      vim.api.nvim_create_autocmd("LspAttach", {
+        pattern = "*.java",
+        callback = function(args)
+          local client = vim.lsp.get_client_by_id(args.data.client_id)
+          -- ensure that only the jdtls client is activated
+          if client.name == "jdtls" then require("jdtls.dap").setup_dap_main_class_configs() end
+        end,
+      })
+    end,
   },
-  opts = function(_, opts)
-    local utils = require "astrocore"
-    -- use this function notation to build some variables
-    local root_markers = { ".git", "mvnw", "gradlew", "pom.xml", "build.gradle", ".project" }
-    local root_dir = require("jdtls.setup").find_root(root_markers)
-    -- calculate workspace dir
-    local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
-    local workspace_dir = vim.fn.stdpath "data" .. "/site/java/workspace-root/" .. project_name
-    vim.fn.mkdir(workspace_dir, "p")
-
-    -- validate operating system
-    if not (vim.fn.has "mac" == 1 or vim.fn.has "unix" == 1 or vim.fn.has "win32" == 1) then
-      utils.notify("jdtls: Could not detect valid OS", vim.log.levels.ERROR)
-    end
-
-    return utils.extend_tbl({
-      cmd = {
-        "java",
-        "-Declipse.application=org.eclipse.jdt.ls.core.id1",
-        "-Dosgi.bundles.defaultStartLevel=4",
-        "-Declipse.product=org.eclipse.jdt.ls.core.product",
-        "-Dlog.protocol=true",
-        "-Dlog.level=ALL",
-        "-javaagent:" .. vim.fn.expand "$MASON/share/jdtls/lombok.jar",
-        "-Xms1g",
-        "--add-modules=ALL-SYSTEM",
-        "--add-opens",
-        "java.base/java.util=ALL-UNNAMED",
-        "--add-opens",
-        "java.base/java.lang=ALL-UNNAMED",
-        "-jar",
-        vim.fn.expand "$MASON/share/jdtls/plugins/org.eclipse.equinox.launcher.jar",
-        "-configuration",
-        vim.fn.expand "$MASON/share/jdtls/config",
-        "-data",
-        workspace_dir,
-      },
-      root_dir = root_dir,
-      settings = {
-        java = {
-          eclipse = { downloadSources = true },
-          configuration = { updateBuildConfiguration = "interactive" },
-          maven = { downloadSources = true },
-          implementationsCodeLens = { enabled = true },
-          referencesCodeLens = { enabled = true },
-          inlayHints = { parameterNames = { enabled = "all" } },
-          signatureHelp = { enabled = true },
-          completion = {
-            favoriteStaticMembers = {
-              "org.hamcrest.MatcherAssert.assertThat",
-              "org.hamcrest.Matchers.*",
-              "org.hamcrest.CoreMatchers.*",
-              "org.junit.jupiter.api.Assertions.*",
-              "java.util.Objects.requireNonNull",
-              "java.util.Objects.requireNonNullElse",
-              "org.mockito.Mockito.*",
-            },
-          },
-          sources = {
-            organizeImports = {
-              starThreshold = 9999,
-              staticStarThreshold = 9999,
-            },
-          },
-        },
-      },
-      init_options = {
-        bundles = {
-          vim.fn.expand "$MASON/share/java-debug-adapter/com.microsoft.java.debug.plugin.jar",
-          -- unpack remaining bundles
-          (table.unpack or unpack)(vim.split(vim.fn.glob "$MASON/share/java-test/*.jar", "\n", {})),
-        },
-      },
-      handlers = {
-        ["$/progress"] = function() end, -- disable progress updates.
-      },
-      filetypes = { "java" },
-      on_attach = function(...)
-        require("jdtls").setup_dap { hotcodereplace = "auto" }
-        local astrolsp_avail, astrolsp = pcall(require, "astrolsp")
-        if astrolsp_avail then astrolsp.on_attach(...) end
-      end,
-    }, opts)
-  end,
-  config = function(_, opts)
-    -- setup autocmd on filetype detect java
-    vim.api.nvim_create_autocmd("Filetype", {
-      pattern = "java", -- autocmd to start jdtls
-      callback = function()
-        if opts.root_dir and opts.root_dir ~= "" then
-          require("jdtls").start_or_attach(opts)
-        else
-          require("astrocore").notify("jdtls: root_dir not found. Please specify a root marker", vim.log.levels.ERROR)
-        end
-      end,
-    })
-    -- create autocmd to load main class configs on LspAttach.
-    -- This ensures that the LSP is fully attached.
-    -- See https://github.com/mfussenegger/nvim-jdtls#nvim-dap-configuration
-    vim.api.nvim_create_autocmd("LspAttach", {
-      pattern = "*.java",
-      callback = function(args)
-        local client = vim.lsp.get_client_by_id(args.data.client_id)
-        -- ensure that only the jdtls client is activated
-        if client.name == "jdtls" then require("jdtls.dap").setup_dap_main_class_configs() end
-      end,
-    })
-  end,
-},
   -- NOTE: == Auto save ==--
   {
     "Pocco81/auto-save.nvim",
@@ -1044,84 +1137,84 @@ return {
   },
   --NOTE: XCode Build
   {
-  "wojciech-kulik/xcodebuild.nvim",
-  dependencies = {
-    "nvim-telescope/telescope.nvim",
-    "MunifTanjim/nui.nvim",
+    "wojciech-kulik/xcodebuild.nvim",
+    dependencies = {
+      "nvim-telescope/telescope.nvim",
+      "MunifTanjim/nui.nvim",
+    },
+    config = function()
+      require("xcodebuild").setup({ 
+        code_coverage = {
+          enabled = true,
+        },
+      })
+  
+      vim.keymap.set("n", "<leader>xl", "<cmd>XcodebuildToggleLogs<cr>", { desc = "Toggle Xcodebuild Logs" })
+      vim.keymap.set("n", "<leader>xb", "<cmd>XcodebuildBuild<cr>", { desc = "Build Project" })
+      vim.keymap.set("n", "<leader>xr", "<cmd>XcodebuildBuildRun<cr>", { desc = "Build & Run Project" })
+      vim.keymap.set("n", "<leader>xt", "<cmd>XcodebuildTest<cr>", { desc = "Run Tests" })
+      vim.keymap.set("n", "<leader>xT", "<cmd>XcodebuildTestClass<cr>", { desc = "Run This Test Class" })
+      vim.keymap.set("n", "<leader>X", "<cmd>XcodebuildPicker<cr>", { desc = "Show All Xcodebuild Actions" })
+      vim.keymap.set("n", "<leader>xd", "<cmd>XcodebuildSelectDevice<cr>", { desc = "Select Device" })
+      vim.keymap.set("n", "<leader>xp", "<cmd>XcodebuildSelectTestPlan<cr>", { desc = "Select Test Plan" })
+      vim.keymap.set("n", "<leader>xc", "<cmd>XcodebuildToggleCodeCoverage<cr>", { desc = "Toggle Code Coverage" })
+      vim.keymap.set("n", "<leader>xC", "<cmd>XcodebuildShowCodeCoverageReport<cr>", { desc = "Show Code Coverage Report" })
+      vim.keymap.set("n", "<leader>xq", "<cmd>Telescope quickfix<cr>", { desc = "Show QuickFix List" })
+    end,
   },
-  config = function()
-    require("xcodebuild").setup({ 
-      code_coverage = {
-        enabled = true,
-      },
-    })
- 
-    vim.keymap.set("n", "<leader>xl", "<cmd>XcodebuildToggleLogs<cr>", { desc = "Toggle Xcodebuild Logs" })
-    vim.keymap.set("n", "<leader>xb", "<cmd>XcodebuildBuild<cr>", { desc = "Build Project" })
-    vim.keymap.set("n", "<leader>xr", "<cmd>XcodebuildBuildRun<cr>", { desc = "Build & Run Project" })
-    vim.keymap.set("n", "<leader>xt", "<cmd>XcodebuildTest<cr>", { desc = "Run Tests" })
-    vim.keymap.set("n", "<leader>xT", "<cmd>XcodebuildTestClass<cr>", { desc = "Run This Test Class" })
-    vim.keymap.set("n", "<leader>X", "<cmd>XcodebuildPicker<cr>", { desc = "Show All Xcodebuild Actions" })
-    vim.keymap.set("n", "<leader>xd", "<cmd>XcodebuildSelectDevice<cr>", { desc = "Select Device" })
-    vim.keymap.set("n", "<leader>xp", "<cmd>XcodebuildSelectTestPlan<cr>", { desc = "Select Test Plan" })
-    vim.keymap.set("n", "<leader>xc", "<cmd>XcodebuildToggleCodeCoverage<cr>", { desc = "Toggle Code Coverage" })
-    vim.keymap.set("n", "<leader>xC", "<cmd>XcodebuildShowCodeCoverageReport<cr>", { desc = "Show Code Coverage Report" })
-    vim.keymap.set("n", "<leader>xq", "<cmd>Telescope quickfix<cr>", { desc = "Show QuickFix List" })
-  end,
-},
   --NOTE: UI-DAP
-   {
-  "rcarriga/nvim-dap-ui",
-  dependencies = { "mfussenegger/nvim-dap", },
-  lazy = true,
-  config = function()
-    require("dapui").setup({
-      controls = {
-        element = "repl",
-        enabled = true,
-      },
-      floating = {
-        border = "single",
-        mappings = {
-          close = { "q", "<Esc>" },
+  {
+    "rcarriga/nvim-dap-ui",
+    dependencies = { "mfussenegger/nvim-dap", },
+    lazy = true,
+    config = function()
+      require("dapui").setup({
+        controls = {
+          element = "repl",
+          enabled = true,
         },
-      },
-      icons = { collapsed = "", expanded = "", current_frame = "" },
-      layouts = {
-        {
-          elements = {
-            { id = "stacks", size = 0.25 },
-            { id = "scopes", size = 0.25 },
-            { id = "breakpoints", size = 0.25 },
-            { id = "watches", size = 0.25 },
+        floating = {
+          border = "single",
+          mappings = {
+            close = { "q", "<Esc>" },
           },
-          position = "left",
-          size = 60,
         },
-        {
-          elements = {
-            { id = "repl", size = 0.35 },
-            { id = "console", size = 0.65 },
+        icons = { collapsed = "", expanded = "", current_frame = "" },
+        layouts = {
+          {
+            elements = {
+              { id = "stacks", size = 0.25 },
+              { id = "scopes", size = 0.25 },
+              { id = "breakpoints", size = 0.25 },
+              { id = "watches", size = 0.25 },
+            },
+            position = "left",
+            size = 60,
           },
-          position = "bottom",
-          size = 10,
+          {
+            elements = {
+              { id = "repl", size = 0.35 },
+              { id = "console", size = 0.65 },
+            },
+            position = "bottom",
+            size = 10,
+          },
         },
-      },
-    })
- 
-    local dap, dapui = require("dap"), require("dapui")
- 
-    dap.listeners.after.event_initialized["dapui_config"] = function()
-      dapui.open()
-    end
-    dap.listeners.before.event_terminated["dapui_config"] = function()
-      dapui.close()
-    end
-    dap.listeners.before.event_exited["dapui_config"] = function()
-      dapui.close()
-    end
-  end,
-},
+      })
+  
+      local dap, dapui = require("dap"), require("dapui")
+  
+      dap.listeners.after.event_initialized["dapui_config"] = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated["dapui_config"] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited["dapui_config"] = function()
+        dapui.close()
+      end
+    end,
+  },
   --NOTE: HTML and CSS
   {
     "AstroNvim/astrocore",
@@ -1196,6 +1289,78 @@ return {
     opts = {
       filetype = {
         postcss = { glyph = "󰌜", hl = "MiniIconsOrange" },
+      },
+    },
+  },
+  --NOTE: Kotlin settings
+  {
+    "nvim-treesitter/nvim-treesitter",
+    optional = true,
+    opts = function(_, opts)
+      if opts.ensure_installed ~= "all" then
+        opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "kotlin" })
+      end
+    end,
+  },
+  {
+    "williamboman/mason-lspconfig.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed =
+        require("astrocore").list_insert_unique(opts.ensure_installed, { "kotlin_language_server" })
+    end,
+  },
+
+  {
+    "jay-babu/mason-null-ls.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "ktlint" })
+    end,
+  },
+
+  {
+    "jay-babu/mason-nvim-dap.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, { "kotlin" })
+    end,
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    optional = true,
+    opts = function(_, opts)
+      opts.ensure_installed = require("astrocore").list_insert_unique(
+        opts.ensure_installed,
+        { "kotlin-language-server", "ktlint", "kotlin-debug-adapter" }
+      )
+    end,
+  },
+  {
+    "mfussenegger/nvim-lint",
+    optional = true,
+    opts = {
+      linters_by_ft = {
+        kotlin = { "ktlint" },
+      },
+    },
+  },
+  --NOTE: Blankline
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    event = "User AstroFile",
+    opts = {
+      indent = {
+        char = "│",
+      },
+      scope = {
+        enabled = false,
+      },
+      exclude = {
+        filetypes = { "help", "alpha", "dashboard", "Trouble", "lazy", "neo-tree" },
+      },
+      whitespace = {
+        remove_blankline_trail = true,
       },
     },
   },

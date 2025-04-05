@@ -1,3 +1,6 @@
+
+-- Customize Mason
+
 ---@type LazySpec
 return {
   -- use mason-tool-installer for automatically installing Mason packages
@@ -11,19 +14,27 @@ return {
         "lua-language-server",
         "csharp_ls",
         "pyright",
+        "java-language-server",
+        "python-lsp-server",
+        "kotlin_language_server",
+        "clangd",
+        "swiftlint",
+        "ktlint",
 
         -- install formatters
         "stylua",
         "prettier",
         "csharpier",
+        "autopep8",
+        "luaformatter",
 
         -- install debuggers
         "debugpy",
         "python",
         "coreclr",
         "codelldb",
-        "javadbh",
-        "javatest",
+        "java-test",
+        "java-debug-adapter",
         "kotlin-debug-adapter",
 
         -- install any other package
